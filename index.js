@@ -19,14 +19,9 @@ port: 5432,
 db.connect();
 //
 
-// let items = [
-//   // { id: 1, title: "Buy milk" },
-//   // { id: 2, title: "Finish homework" },
-// ];
-
 app.get("/", async (req, res) => {
   // Display all of the items from the DB
-  const result = await db.query("SELECT * FROM items");
+  const result = await db.query("SELECT * FROM items ORDER BY id");
   let items = result.rows;
 
   res.render("index.ejs", {
@@ -37,16 +32,28 @@ app.get("/", async (req, res) => {
 
 app.post("/add", async (req, res) => {
   const item = req.body.newItem;
-  
   const result = await db.query("INSERT INTO items (title) VALUES ($1) RETURNING *", [item]);
-  console.log(result.rows);
+  // console.log(result.rows);
 
   res.redirect("/");
 });
 
-app.post("/edit", (req, res) => {});
+app.post("/edit", async (req, res) => {
+  const itemId = req.body.updatedItemId;
+  const newValue = req.body.updatedItemTitle;
 
-app.post("/delete", (req, res) => {});
+  const result = await db.query("UPDATE items SET title = $1 WHERE id = $2 RETURNING *", [newValue, itemId]);
+  // console.log(result.rows);
+  res.redirect("/");
+});
+
+app.post("/delete", async (req, res) => {
+  const deleteId = req.body.deleteItemId;
+
+  const result = await db.query("DELETE FROM items WHERE id = $1 RETURNING *", [deleteId]);
+  // console.log(result.rows);
+  res.redirect("/");
+});
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
